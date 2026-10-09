@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wrytole | Administration</title><link rel="stylesheet" href="styles.css">
+<style>
+.admin-wrap{max-width:1180px;margin:2rem auto;padding:0 1rem}.admin-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem;margin:1.5rem 0}.admin-stat,.admin-panel{background:var(--card,#fff);border:1px solid var(--border,#ddd);border-radius:16px;padding:1rem}.admin-stat strong{display:block;font-size:1.8rem}.admin-panel{margin:1rem 0;overflow:auto}.admin-panel h2{margin-top:0}.admin-table{width:100%;border-collapse:collapse;min-width:650px}.admin-table th,.admin-table td{padding:.75rem;text-align:left;border-bottom:1px solid var(--border,#ddd);vertical-align:top}.admin-table button,.admin-actions button{margin:.15rem;padding:.5rem .7rem}.admin-message{padding:.8rem;border-radius:10px;margin:.7rem 0}.hidden{display:none!important}.admin-muted{opacity:.75}.admin-actions{display:flex;gap:.35rem;flex-wrap:wrap}.danger{background:#a42c2c;color:#fff}.success{background:#147747;color:#fff}
+</style>
+</head>
+<body data-page="admin">
+<header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html">Wrytole</a><nav><a href="index.html">Public site</a><a href="teacher.html">Teacher panel</a><a href="pricing.html">Pricing</a></nav><button id="theme" class="outline" type="button">Day / Night</button></div></header>
+<main class="admin-wrap">
+<div class="admin-head"><div><p class="eyebrow">PRIVATE CONTROL PANEL</p><h1>Wrytole Administration</h1><p class="admin-muted">Manage teacher applications, payment references, subscriptions and learning papers.</p></div><button id="admin-signout" class="outline hidden">Sign out</button></div>
+<div id="admin-alert" class="admin-message hidden" role="status"></div>
+<section id="admin-login" class="admin-panel"><h2>Administrator sign in</h2><p>Use the administrator account already authorized in the database.</p><form id="admin-login-form"><label for="admin-email">Email</label><input id="admin-email" type="email" autocomplete="username" required><label for="admin-password">Password</label><input id="admin-password" type="password" autocomplete="current-password" required><button class="primary" type="submit">Sign in</button></form></section>
+<section id="admin-content" class="hidden">
+<div class="admin-grid"><div class="admin-stat"><span>Teacher applications</span><strong id="stat-applications">—</strong></div><div class="admin-stat"><span>Pending payments</span><strong id="stat-payments">—</strong></div><div class="admin-stat"><span>Active subscriptions</span><strong id="stat-subs">—</strong></div><div class="admin-stat"><span>Learning resources</span><strong id="stat-resources">—</strong></div></div>
+<div class="admin-panel"><div class="admin-head"><h2>Teacher applications</h2><button data-refresh>Refresh</button></div><div id="applications-table">Loading…</div></div>
+<div class="admin-panel"><div class="admin-head"><h2>Payment submissions</h2><button data-refresh>Refresh</button></div><p class="admin-muted">Verify the Chipper Cash transaction in your payment account before approving it.</p><div id="payments-table">Loading…</div></div>
+<div class="admin-panel"><div class="admin-head"><h2>Subscriptions</h2><button data-refresh>Refresh</button></div><div id="subscriptions-table">Loading…</div></div>
+<div class="admin-panel"><div class="admin-head"><h2>Learning papers and resources</h2><button data-refresh>Refresh</button></div><div id="resources-table">Loading…</div></div>
+</section>
+</main>
+<footer class="site-footer"><div class="container"><p>Wrytole administration · <a href="index.html">Return to public website</a></p></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="app-config.js"></script><script src="admin.js"></script>
+</body></html>
