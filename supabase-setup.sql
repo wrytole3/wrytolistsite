@@ -6,9 +6,7 @@ alter table public.subscription_plans add column if not exists audience text not
 alter table public.subscription_plans drop constraint if exists subscription_plans_audience_check;
 alter table public.subscription_plans add constraint subscription_plans_audience_check check(audience in ('learner','teacher'));
 update public.subscription_plans set audience='learner' where id in ('day','week','month','quarter','year_plus');
-insert into public.subscription_plans(id,name,price_ugx,duration_days,download_limit,active,description,audience)
-values('teacher_monthly','Teacher Monthly',50000,30,null,true,'Teacher account subscription for 30 days','teacher')
-on conflict(id) do update set name=excluded.name,price_ugx=excluded.price_ugx,duration_days=excluded.duration_days,download_limit=excluded.download_limit,active=true,description=excluded.description,audience='teacher';
+-- Legacy subscription plans are retained for historical records but are no longer sold.\nupdate public.subscription_plans set active=false;
 
 create table if not exists public.teacher_applications(
  id uuid primary key default gen_random_uuid(), user_id uuid not null references public.profiles(id) on delete cascade,

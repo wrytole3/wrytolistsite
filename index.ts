@@ -35,32 +35,49 @@ Deno.serve(async (req: Request) => {
   if (!resourceId || !["view", "download", "preview"].includes(mode)) return reply({ error: "Missing document or invalid access mode." }, 400);
 
   const { data: resource, error: resourceError } = await admin
-    .from("resources")
-    .select("id,title,price_ugx,file_path,status")
-    .eq("id", resourceId)
-    .eq("status", "approved")
-    .maybeSingle();
+    .from("resources").select("id,title,price_ugx,file_path,status,uploader_id")
+    .eq("id", resourceId).eq("status", "approved").maybeSingle();
   if (resourceError || !resource) return reply({ error: "Document not found or not approved." }, 404);
   if (!resource.file_path) return reply({ error: "This resource has no attached file." }, 404);
 
-  const paid = Number(resource.price_ugx || 0) > 0;
-  if (mode === "download" && !userId) return reply({ error: "Sign in or create an account to download this document." }, 401);
-  if (paid && mode !== "preview") {
-    if (!userId) return reply({ error: "Create an account or sign in to continue reading this paid document." }, 401);
-    const { data: purchase } = await admin.from("document_purchases")
-      .select("id,status")
-      .eq("user_id", userId)
-      .eq("resource_id", resource.id)
-      .eq("status", "approved")
-      .maybeSingle();
-    if (!purchase) return reply({ error: "Full access has not been approved for this account yet." }, 403);
+  let profile: { role?: string } | null = null;
+  if (userId) {
+    const { data } = await admin.from("profiles").select("role").eq("id", userId).maybeSingle();
+    profile = data;
+  }
+
+  let consumeCredit = false;
+  if (mode === "download") {
+    if (!userId) return reply({ error: "Sign in to download. Purchase a download package from Pricing if you have no remaining credits." }, 401);
+    const isAdmin = profile?.role === "admin";
+    const isTeacherOwnFile = profile?.role === "teacher" && resource.uploader_id === userId;
+    if (!isAdmin && !isTeacherOwnFile) {
+      if (profile?.role === "teacher" || profile?.role === "school") {
+        const { data: activation } = await admin.from("wrytole_access_accounts")
+          .select("activated").eq("user_id", userId).maybeSingle();
+        if (!activation?.activated) return reply({ error: `Your ${profile.role} account is not activated. Submit the one-time activation payment from Pricing and wait for administrator verification.` }, 403);
+      }
+      consumeCredit = true;
+    }
+  }
+
+  // Preview is intentionally limited to the first two pages for paid PDFs.
+  if (Number(resource.price_ugx || 0) > 0 && mode === "preview" && !userId) {
+    // Public two-page preview is allowed.
   }
 
   const { data: file, error: storageError } = await admin.storage.from("education-files").download(resource.file_path);
   if (storageError || !file) return reply({ error: "The document file could not be retrieved." }, 500);
 
   let bytes = new Uint8Array(await file.arrayBuffer());
-  if (paid && mode === "preview") {
+  if (consumeCredit && userId) {
+    const { data: debit, error: debitError } = await admin.rpc("wrytole_consume_download_credit", {
+      p_user_id: userId, p_resource_id: resource.id,
+    });
+    if (debitError) return reply({ error: "Download balance could not be checked. Please try again." }, 500);
+    if (!debit?.success) return reply({ error: debit?.error || "Your download balance is exhausted. Please purchase another package to continue downloading.", remaining: 0 }, 402);
+  }
+  if (Number(resource.price_ugx || 0) > 0 && mode === "preview") {
     try {
       const original = await PDFDocument.load(bytes);
       const preview = await PDFDocument.create();
@@ -69,7 +86,7 @@ Deno.serve(async (req: Request) => {
       copied.forEach(page => preview.addPage(page));
       bytes = await preview.save();
     } catch {
-      return reply({ error: "A two-page preview is available for PDF documents only. Please sign in to request full access." }, 415);
+      return reply({ error: "A two-page preview is available for PDF documents only. Sign in and purchase a download package for full downloads." }, 415);
     }
   }
 
@@ -77,12 +94,8 @@ Deno.serve(async (req: Request) => {
   const safeName = String(resource.title || "wrytole-document").replace(/[^a-z0-9_-]+/gi, "-").slice(0, 80) || "wrytole-document";
   return new Response(bytes, {
     status: 200,
-    headers: {
-      ...cors,
-      "Content-Type": "application/pdf",
+    headers: { ...cors, "Content-Type": "application/pdf",
       "Content-Disposition": `${disposition}; filename="${safeName}.pdf"`,
-      "Cache-Control": "private, no-store",
-      "X-Content-Type-Options": "nosniff",
-    },
+      "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" },
   });
 });

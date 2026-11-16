@@ -11,3 +11,7 @@
 If uploading fails, confirm the SQL ran successfully, the `education-files` bucket exists and is private, the signed-in profile role is `teacher` or `admin`, and email confirmation settings are understood. Google sign-in requires configured Google OAuth credentials and redirect URLs.
 
 Never add a Supabase service-role/secret key to the website files.
+
+
+## Access-credit pricing update
+After the existing database setup is already installed, run `wrytole-access-credit-migration.sql` in Supabase SQL Editor and deploy `supabase/functions/document-access/index.ts` to the existing `document-access` Edge Function. Then upload the updated website files to the existing GitHub repository. Do not delete or recreate the existing Supabase project, resources table, or `education-files` bucket. See `ACCESS-CREDIT-UPDATE.md` for the test checklist and existing-school-account review note.

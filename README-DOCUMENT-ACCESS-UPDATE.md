@@ -1,4 +1,4 @@
-# Wrytole Education — integrated document-access update
+> **Superseded payment model note:** This older document describes per-document payment approvals. The current pricing and access model is in `ACCESS-CREDIT-UPDATE.md`; download packages and account activation replace the old individual-document payment flow. Keep historical records, but deploy the newer migration and Edge Function for the current rules.\n\n# Wrytole Education — integrated document-access update
 
 This ZIP is based on the repository ZIP supplied in this conversation. It preserves the existing site files and adds targeted changes rather than replacing the site with a new design.
 
